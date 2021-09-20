@@ -1,9 +1,8 @@
-#ifndef DIAL_HSM
-#define DIAL_HSM
-#include <ncurses.h>
+#ifndef DIAL_HSM_H
+#define DIAL_HSM_H
 #include "hsm_header.h"
 #include "hsm_event.h"
-
+#include "device_interface.h"
 // Constants Definition
 #define DIAL_PERIOD_STOPPED 100
 #define DIAL_PERIOD_SAMPLE  10
@@ -22,8 +21,6 @@ extern void INIT_HSM_HEADER(Hsm_header * header,
                      void * event_handler,
                      void * event_receiver,
                      void * event_dispatcher);
-
-extern int GET_DIAL_POSITION();
 
 //Initial function
 void INIT_DIAL_HSM(Dial_hsm* sm, void * event_listener);

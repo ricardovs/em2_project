@@ -3,8 +3,9 @@
 #include "utils_hsm.h"
 
 void INIT_DIAL_HSM(Dial_hsm* sm, void * event_listener){
+    DIAL_DEVICE_INIT();
     INIT_HSM_HEADER(&sm->header,  &DIAL_IDLE_STATE ,  &dial_event_receiver, event_listener);
-    sm->last_sampled_position = GET_DIAL_POSITION();
+    sm->last_sampled_position = DIAL_DEVICE_GET_POSITION();
     sm->last_position = sm->last_sampled_position;
     sm->stopped_time = 0;
     sm->sample_time = 0;
@@ -26,7 +27,7 @@ void get_diff_and_moved_foward(const unsigned * new_position, const unsigned * o
 }
 // Hierarchical State Machines
 void DIAL_IDLE_STATE(Dial_hsm* sm, HsmEvent * event){
-    int position = GET_DIAL_POSITION();
+    int position = DIAL_DEVICE_GET_POSITION();
     sm->header.event_handler = &DIAL_IDLE_STATE;
     if (position == sm->last_position){
         return;
@@ -57,7 +58,7 @@ void DIAL_IDLE_STATE(Dial_hsm* sm, HsmEvent * event){
 }
 
 void DIAL_SLOW_MOVEMENT_STATE(Dial_hsm* sm, HsmEvent * event){
-    int position = GET_DIAL_POSITION();
+    int position = DIAL_DEVICE_GET_POSITION();
     sm->sample_time--;
     sm->stopped_time--;
     sm->header.event_handler = &DIAL_SLOW_MOVEMENT_STATE;
@@ -119,7 +120,7 @@ void DIAL_SLOW_MOVEMENT_STATE(Dial_hsm* sm, HsmEvent * event){
 }
 
 void DIAL_FAST_MOVEMENT_STATE(Dial_hsm* sm, HsmEvent * event){
-    int position = GET_DIAL_POSITION();
+    int position = DIAL_DEVICE_GET_POSITION();
     sm->sample_time--;
     sm->stopped_time--;
     sm->header.event_handler = &DIAL_FAST_MOVEMENT_STATE;

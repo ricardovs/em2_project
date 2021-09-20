@@ -5,11 +5,16 @@
 #include "dial_hsm.h"
 #include "top_hsm.h"
 #include "utils_hsm.h"
+#include <stdio.h>
 
 static unsigned dial_position = 0;
 
-int GET_DIAL_POSITION(){
+int DIAL_DEVICE_GET_POSITION(){
     return dial_position;
+}
+
+void DIAL_DEVICE_INIT(){
+    return;
 }
 
 void UPDATE_DIAL_POSITION(const unsigned p){

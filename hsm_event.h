@@ -1,5 +1,5 @@
-#ifndef HSM_EVENT
-#define HSM_EVENT
+#ifndef HSM_EVENT_H
+#define HSM_EVENT_H
 
 typedef enum HsmEvent{
     NO_EVENT,

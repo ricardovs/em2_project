@@ -1,5 +1,5 @@
-#ifndef HSM_HEADER
-#define HSM_HEADER
+#ifndef HSM_HEADER_H
+#define HSM_HEADER_H
 #include "hsm_event.h"
 
 typedef void (*Event_function)(HsmEvent * event);
