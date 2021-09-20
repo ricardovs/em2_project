@@ -1,28 +1,42 @@
-#include <ncurses.h>
+#define SIMULATION_FLAG
+
+//#include <ncurses.h>
 #include "hsm_event.h"
 #include "dial_hsm.h"
 #include "top_hsm.h"
+#include "utils_hsm.h"
 
-static int dial_position = 0;
+static unsigned dial_position = 0;
 
 int GET_DIAL_POSITION(){
     return dial_position;
 }
 
-void UPDATE_DIAL_POSITION(const int p){
+void UPDATE_DIAL_POSITION(const unsigned p){
     dial_position = p;
 }
 
-void get_dial_event(void * hsm, HsmEvent * event){
-    printf("Dial dispatched event: %s", GET_EVENT_NAME(*event));
+void print_event(HsmEvent * event){
+    printf("Dial dispatched event: %s\n.", GET_EVENT_NAME(*event));
 }
 
 int main(){
     Top_hsm top;
-    INIT_TOP_HSM(&top, &get_dial_event);
-    INIT_DIAL_HSM(&top.dial, top.header.event_receiver);
-    UPDATE_DIAL_POSITION(++dial_position);
+    INIT_TOP_HSM(&top, &print_event);
+    UPDATE_DIAL_POSITION(0xffffffff);
+    UPDATE_DIAL_POSITION(dial_position+1);
     TOP_RUN_ALL_HSMS(&top);
-
+    UPDATE_DIAL_POSITION(dial_position+2);
+    TOP_RUN_ALL_HSMS(&top);
+    UPDATE_DIAL_POSITION(dial_position-1);
+    TOP_RUN_ALL_HSMS(&top);
+    /*int a = 0xff00ffff;
+    printf("a = %d, %u, %#8x\n", a, a, a);
+    int b = 0x800ffffff;
+    printf("b = %d, %u, %#8x \n", b, b, b);
+    unsigned r = catch_sum_overflow(&a, &b);
+    printf("Got =  %d\n", r);
+    */
+    printf("Done.\n");
     return 0;
 }

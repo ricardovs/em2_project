@@ -2,10 +2,11 @@
 #define HSM_HEADER
 #include "hsm_event.h"
 
-typedef void (*Event_function)(void *, HsmEvent *);
+typedef void (*Event_function)(HsmEvent * event);
+typedef void (*State_function)(void * Hsm_machine, HsmEvent * event);
 
 typedef struct Hsm_header {
-    Event_function event_handler;
+    State_function event_handler;
     Event_function event_receiver;
     Event_function event_dispatcher;
     HsmEvent pending_event;
