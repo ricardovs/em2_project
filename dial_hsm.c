@@ -29,7 +29,7 @@ void get_diff_and_moved_foward(const unsigned * const new_position, const unsign
 // Hierarchical State Machines
 void DIAL_IDLE_STATE(Dial_hsm * const sm, HsmEvent * const event){
     int position = DIAL_DEVICE_GET_POSITION();
-    sm->header.event_handler = &DIAL_IDLE_STATE;
+    sm->header.event_handler = (State_function) &DIAL_IDLE_STATE;
     if (position == sm->last_position){
         return;
     }
@@ -41,7 +41,7 @@ void DIAL_IDLE_STATE(Dial_hsm * const sm, HsmEvent * const event){
     sm->sample_commands = 0;
     if(diff > DIAL_FAST_DIFF_POSITION){
         sm->last_sampled_position = position;
-        sm->header.event_handler = &DIAL_FAST_MOVEMENT_STATE;
+        sm->header.event_handler = (State_function) &DIAL_FAST_MOVEMENT_STATE;
         if(moved_foward){
             sm->header.pending_event = FWD_DIAL_FAST_EVENT;
         }else{
@@ -49,7 +49,7 @@ void DIAL_IDLE_STATE(Dial_hsm * const sm, HsmEvent * const event){
         }
         sm->header.event_dispatcher(&sm->header.pending_event);
     }else{
-        sm->header.event_handler = &DIAL_SLOW_MOVEMENT_STATE;
+        sm->header.event_handler = (State_function) &DIAL_SLOW_MOVEMENT_STATE;
         if(moved_foward){
             sm->header.pending_event = FWD_DIAL_SLOW_EVENT;
         }else{
@@ -63,7 +63,7 @@ void DIAL_SLOW_MOVEMENT_STATE(Dial_hsm *const sm, HsmEvent *const event){
     int position = DIAL_DEVICE_GET_POSITION();
     sm->sample_time--;
     sm->stopped_time--;
-    sm->header.event_handler = &DIAL_SLOW_MOVEMENT_STATE;
+    sm->header.event_handler = (State_function) &DIAL_SLOW_MOVEMENT_STATE;
     if (position == sm->last_position){
         if(sm->stopped_time > 0){
             if(sm->sample_time <= 0){
@@ -75,7 +75,7 @@ void DIAL_SLOW_MOVEMENT_STATE(Dial_hsm *const sm, HsmEvent *const event){
         }
         sm->stopped_time = 0;
         sm->sample_commands = 0;
-        sm->header.event_handler = &DIAL_IDLE_STATE;
+        sm->header.event_handler = (State_function) &DIAL_IDLE_STATE;
         sm->header.pending_event = DIAL_STOPPED_EVENT;
         sm->header.event_dispatcher(&sm->header.pending_event);
         return;
@@ -89,7 +89,7 @@ void DIAL_SLOW_MOVEMENT_STATE(Dial_hsm *const sm, HsmEvent *const event){
         sm->last_sampled_position = position;
         sm->sample_time = DIAL_PERIOD_SAMPLE;
         sm->sample_commands = 0;
-        sm->header.event_handler = &DIAL_FAST_MOVEMENT_STATE;
+        sm->header.event_handler = (State_function) &DIAL_FAST_MOVEMENT_STATE;
         if(moved_foward){
             sm->header.pending_event = FWD_DIAL_FAST_EVENT;
         }else{
@@ -101,7 +101,7 @@ void DIAL_SLOW_MOVEMENT_STATE(Dial_hsm *const sm, HsmEvent *const event){
         int sampled_foward;
         get_diff_and_moved_foward(&position, &sm->last_sampled_position, &diff, &sampled_foward);
         if(diff > DIAL_FAST_DIFF_POSITION){
-            sm->header.event_handler = &DIAL_FAST_MOVEMENT_STATE;
+            sm->header.event_handler = (State_function) &DIAL_FAST_MOVEMENT_STATE;
             sm->last_sampled_position = position;
             sm->sample_time = DIAL_PERIOD_SAMPLE;
             sm->sample_commands = 0;
@@ -131,7 +131,7 @@ void DIAL_FAST_MOVEMENT_STATE(Dial_hsm* sm, HsmEvent * event){
     int position = DIAL_DEVICE_GET_POSITION();
     sm->sample_time--;
     sm->stopped_time--;
-    sm->header.event_handler = &DIAL_FAST_MOVEMENT_STATE;
+    sm->header.event_handler = (State_function) &DIAL_FAST_MOVEMENT_STATE;
     if (position == sm->last_position){
         if(sm->stopped_time > 0){
             if(sm->sample_time <= 0){
@@ -143,7 +143,7 @@ void DIAL_FAST_MOVEMENT_STATE(Dial_hsm* sm, HsmEvent * event){
         }
         sm->stopped_time = 0;
         sm->sample_commands = 0;
-        sm->header.event_handler = &DIAL_IDLE_STATE;
+        sm->header.event_handler = (State_function) &DIAL_IDLE_STATE;
         sm->header.pending_event = DIAL_STOPPED_EVENT;
         sm->header.event_dispatcher(&sm->header.pending_event);
         return;
@@ -172,7 +172,7 @@ void DIAL_FAST_MOVEMENT_STATE(Dial_hsm* sm, HsmEvent * event){
             sm->sample_time = DIAL_PERIOD_SAMPLE;
             sm->last_sampled_position = position;
             sm->sample_commands = 0;
-            sm->header.event_handler = &DIAL_SLOW_MOVEMENT_STATE;
+            sm->header.event_handler = (State_function) &DIAL_SLOW_MOVEMENT_STATE;
             if(moved_foward){
                 sm->header.pending_event = FWD_DIAL_SLOW_EVENT;
             }else{

@@ -26,8 +26,7 @@ main: main.c $(OBJSPATHS) $(OBJSPATHS_EXTRA) device_interface.h
 $(OBJDIR)/dial_hsm.o : dial_hsm.c dial_hsm.h \
                        $(OBJDIR)/utils_hsm.o $(OBJDIR)/hsm_event.o $(OBJDIR)/hsm_header.o\
                        device_interface.h
-	$(CC) -c dial_hsm.c -o $(OBJDIR)/dial_hsm.o \
-	    -Wall -Wno-incompatible-pointer-types
+	$(CC) -c dial_hsm.c -o $(OBJDIR)/dial_hsm.o
 
 $(OBJDIR)/top_hsm.o : top_hsm.c top_hsm.h \
                       $(OBJDIR)/hsm_event.o $(OBJDIR)/dial_hsm.o
