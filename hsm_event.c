@@ -18,7 +18,9 @@ char* GET_EVENT_NAME(HsmEvent event){
             return "BWD_DIAL_SLOW_EVENT";
         case BWD_DIAL_FAST_EVENT:
             return "BWD_DIAL_FAST_EVENT";
+        case DIAL_STOPPED_EVENT:
+            return "DIAL_STOPPED_EVENT";
         default:
-            return "Invalid Event";
+            return "Unknonwn Event";
     }
 }

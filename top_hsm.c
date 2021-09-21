@@ -6,7 +6,14 @@ void INIT_TOP_HSM(Top_hsm * top, void * outside_listener){
 }
 
 void TOP_EVENT_RECEIVER(Top_hsm * top, HsmEvent * event){
+    switch (*event)
+    {
+    case NO_EVENT:
+        return;
     top->header.event_dispatcher(event);
+    default:
+        break;
+    }
     return;
 }
 

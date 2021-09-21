@@ -1,5 +1,5 @@
-#ifndef UTILS_HSM
-#define UTILS_HSM
+#ifndef UTILS_HSM_H
+#define UTILS_HSM_H
 
 #ifndef HIGH_BIT_MASK
     #define HIGH_BIT_MASK (0x1 << 31)

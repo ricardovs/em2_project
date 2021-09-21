@@ -1,5 +1,5 @@
-#ifndef TOP_HSM
-#define TOP_HSM
+#ifndef TOP_HSM_H
+#define TOP_HSM_H
 
 #include "hsm_event.h"
 #include "dial_hsm.h"
