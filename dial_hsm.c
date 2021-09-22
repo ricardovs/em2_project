@@ -1,22 +1,47 @@
-#include<stdio.h>
+#include <ncurses.h>
 #include "dial_hsm.h"
 #include "utils_hsm.h"
 
-void INIT_DIAL_HSM(Dial_hsm* sm, void * event_listener){
-    DIAL_DEVICE_INIT();
-    INIT_HSM_HEADER(&sm->header,  &DIAL_IDLE_STATE ,  &dial_event_receiver, event_listener);
-    sm->last_sampled_position = DIAL_DEVICE_GET_POSITION();
-    sm->last_position = sm->last_sampled_position;
-    sm->stopped_time = 0;
-    sm->sample_time = 0;
-    sm->sample_commands = 0;
+void RUN_DIAL_HSM(Dial_hsm *dial){
+    dial->state(dial);
 }
 
-void dial_event_receiver(const HsmEvent * const event){
+void DIAL_TRANS(Dial_hsm *const dial , State_function next_state){
+    if(next_state ==  DIAL_STOPPED_STATE){
+        dial->state = DIAL_STOPPED_STATE;
+        dial->event = DIAL_STOPPED_EVENT;
+        return;
+    }
+    if(next_state == DIAL_MOVING_FORWARD_STATE){
+        dial->state = DIAL_MOVING_FORWARD_STATE;
+        dial->stopped_time = DIAL_PERIOD_STOPPED;
+        dial->event = DIAL_MOVED_FORWARD_EVENT;
+        return;
+    }
+    if(next_state ==  DIAL_MOVING_BACKWARD_STATE){
+        dial->state = DIAL_MOVING_BACKWARD_STATE;
+        dial->stopped_time = DIAL_PERIOD_STOPPED;
+        dial->event = DIAL_MOVED_BACKWARD_EVENT;
+        return;
+    }
+    dial->state = DIAL_STOPPED_STATE;
+    dial->event = NO_EVENT;
+}
+
+void DIAL_INIT_HSM(Dial_hsm* dial){
+    DIAL_DEVICE_INIT();
+    dial->event = NO_EVENT;
+    dial->position = 0;
+    dial->diff = 0;
+    dial->stopped_time = 0;
+    dial->state = DIAL_STOPPED_STATE;
+}
+
+void DIAL_EVENT_RECEIVER(const HsmEvent * const event){
     return;
 }
 
-void get_diff_and_moved_foward(const unsigned * const new_position, const unsigned * const old_position, int * const diff, int * const moved_foward){
+void dial_diff_script(const unsigned * const new_position, const unsigned * const old_position, int * const diff, int * const moved_foward){
     *diff = *new_position - *old_position;
     if(*diff < 0){
         *diff = (-*diff);
@@ -27,158 +52,87 @@ void get_diff_and_moved_foward(const unsigned * const new_position, const unsign
     }
 }
 // Hierarchical State Machines
-void DIAL_IDLE_STATE(Dial_hsm * const sm, HsmEvent * const event){
+State_function DIAL_STOPPED_STATE_HANDLER(Dial_hsm * const dial){
     int position = DIAL_DEVICE_GET_POSITION();
-    sm->header.event_handler = (State_function) &DIAL_IDLE_STATE;
-    if (position == sm->last_position){
-        return;
+    if (position == dial->position){
+            dial->event = NO_EVENT;
+        return 0;
     }
-    int diff, moved_foward;
-    get_diff_and_moved_foward(&position, &sm->last_position, &diff, &moved_foward);
-    sm->last_position = position;
-    sm->stopped_time = DIAL_PERIOD_STOPPED;
-    sm->sample_time = DIAL_PERIOD_SAMPLE;
-    sm->sample_commands = 0;
-    if(diff > DIAL_FAST_DIFF_POSITION){
-        sm->last_sampled_position = position;
-        sm->header.event_handler = (State_function) &DIAL_FAST_MOVEMENT_STATE;
-        if(moved_foward){
-            sm->header.pending_event = FWD_DIAL_FAST_EVENT;
-        }else{
-            sm->header.pending_event = BWD_DIAL_FAST_EVENT;
-        }
-        sm->header.event_dispatcher(&sm->header.pending_event);
+    int diff, moved_forward;
+    dial_diff_script(&position, &dial->position, &dial->diff, &moved_forward);
+    dial->position = position;
+    if(moved_forward > 0){
+        DIAL_TRANS(dial, DIAL_MOVING_FORWARD_STATE);
     }else{
-        sm->header.event_handler = (State_function) &DIAL_SLOW_MOVEMENT_STATE;
-        if(moved_foward){
-            sm->header.pending_event = FWD_DIAL_SLOW_EVENT;
-        }else{
-            sm->header.pending_event = BWD_DIAL_SLOW_EVENT;
-        }
-        sm->header.event_dispatcher(&sm->header.pending_event);
+        DIAL_TRANS(dial, DIAL_MOVING_BACKWARD_STATE);
     }
+    return 0;
 }
 
-void DIAL_SLOW_MOVEMENT_STATE(Dial_hsm *const sm, HsmEvent *const event){
+State_function DIAL_MOVING_FORWARD_STATE_HANDLER(Dial_hsm *const dial){
     int position = DIAL_DEVICE_GET_POSITION();
-    sm->sample_time--;
-    sm->stopped_time--;
-    sm->header.event_handler = (State_function) &DIAL_SLOW_MOVEMENT_STATE;
-    if (position == sm->last_position){
-        if(sm->stopped_time > 0){
-            if(sm->sample_time <= 0){
-                sm->sample_time = DIAL_PERIOD_SAMPLE;
-                sm->sample_commands = 0;
-                sm->last_sampled_position = position;
-            }
-            return;
+    dial->stopped_time--;
+    if(position == dial->position){
+        if(dial->stopped_time > 0){
+            dial->event = NO_EVENT;
+            return 0;
         }
-        sm->stopped_time = 0;
-        sm->sample_commands = 0;
-        sm->header.event_handler = (State_function) &DIAL_IDLE_STATE;
-        sm->header.pending_event = DIAL_STOPPED_EVENT;
-        sm->header.event_dispatcher(&sm->header.pending_event);
-        return;
+        DIAL_TRANS(dial, DIAL_STOPPED_STATE);
+        return 0;
     }
-    sm->stopped_time = DIAL_PERIOD_STOPPED;
-    sm->sample_commands++;
-    int diff, moved_foward;
-    get_diff_and_moved_foward(&position, &sm->last_position, &diff, &moved_foward);
-    sm->last_position = position;
-    if((sm->sample_commands > DIAL_FAST_SAMPLED_COMANDS)||(diff > DIAL_FAST_DIFF_POSITION)){
-        sm->last_sampled_position = position;
-        sm->sample_time = DIAL_PERIOD_SAMPLE;
-        sm->sample_commands = 0;
-        sm->header.event_handler = (State_function) &DIAL_FAST_MOVEMENT_STATE;
-        if(moved_foward){
-            sm->header.pending_event = FWD_DIAL_FAST_EVENT;
+    dial->stopped_time = DIAL_PERIOD_STOPPED;
+    int diff_detected, moved_forward;
+    dial_diff_script(&position, &dial->position, &diff_detected, &moved_forward);
+    dial->position = position;
+    if(moved_forward){
+        if(!catch_sum_overflow(&dial->diff, &diff_detected)){
+            dial->diff += diff_detected;
         }else{
-            sm->header.pending_event = BWD_DIAL_FAST_EVENT;
+            //God knows!!! How many ticks!!
         }
-        sm->header.event_dispatcher(&sm->header.pending_event);
-        return;
-    }else{
-        int sampled_foward;
-        get_diff_and_moved_foward(&position, &sm->last_sampled_position, &diff, &sampled_foward);
-        if(diff > DIAL_FAST_DIFF_POSITION){
-            sm->header.event_handler = (State_function) &DIAL_FAST_MOVEMENT_STATE;
-            sm->last_sampled_position = position;
-            sm->sample_time = DIAL_PERIOD_SAMPLE;
-            sm->sample_commands = 0;
-            if(sampled_foward){
-                sm->header.pending_event = FWD_DIAL_FAST_EVENT;
-            }else{
-                sm->header.pending_event = BWD_DIAL_FAST_EVENT;
-            }
-            sm->header.event_dispatcher(&sm->header.pending_event);
-            return;
-        }
-        if(sm->sample_time <= 0){
-            sm->sample_time = DIAL_PERIOD_SAMPLE;
-            sm->last_sampled_position = position;
-            sm->sample_commands = 0;
-        }
-        if(moved_foward){
-            sm->header.pending_event = FWD_DIAL_SLOW_EVENT;
-        }else{
-            sm->header.pending_event = BWD_DIAL_SLOW_EVENT;
-        }
-        sm->header.event_dispatcher(&sm->header.pending_event);
+        dial->event = DIAL_MOVED_FORWARD_EVENT;
+        return 0;
     }
+    if(diff_detected > dial->diff){
+        dial->diff = diff_detected - dial->diff;
+        DIAL_TRANS(dial, DIAL_MOVING_BACKWARD_STATE);
+        return 0;
+    }
+    dial->diff -= diff_detected;
+    dial->event = DIAL_MOVED_BACKWARD_EVENT;
+    return 0;
 }
 
-void DIAL_FAST_MOVEMENT_STATE(Dial_hsm* sm, HsmEvent * event){
+State_function DIAL_MOVING_BACKWARD_STATE_HANDLER(Dial_hsm *const dial){
     int position = DIAL_DEVICE_GET_POSITION();
-    sm->sample_time--;
-    sm->stopped_time--;
-    sm->header.event_handler = (State_function) &DIAL_FAST_MOVEMENT_STATE;
-    if (position == sm->last_position){
-        if(sm->stopped_time > 0){
-            if(sm->sample_time <= 0){
-                sm->sample_time = DIAL_PERIOD_SAMPLE;
-                sm->sample_commands = 0;
-                sm->last_sampled_position = position;
-            }
-            return;
+    dial->stopped_time--;
+    if(position == dial->position){
+        if(dial->stopped_time > 0){
+            dial->event = NO_EVENT;
+            return 0;
         }
-        sm->stopped_time = 0;
-        sm->sample_commands = 0;
-        sm->header.event_handler = (State_function) &DIAL_IDLE_STATE;
-        sm->header.pending_event = DIAL_STOPPED_EVENT;
-        sm->header.event_dispatcher(&sm->header.pending_event);
-        return;
+        DIAL_TRANS(dial, DIAL_STOPPED_STATE);
+        return 0;
     }
-    sm->stopped_time = DIAL_PERIOD_STOPPED;
-    sm->sample_commands++;
-    int diff, moved_foward;
-    get_diff_and_moved_foward(&position, &sm->last_position, &diff, &moved_foward);
-    sm->last_position = position;
-    if(moved_foward){
-        sm->header.pending_event = FWD_DIAL_FAST_EVENT;
-    }else{
-        sm->header.pending_event = BWD_DIAL_FAST_EVENT;
-    }
-    if(diff > DIAL_FAST_DIFF_POSITION){
-        sm->last_sampled_position = position;
-        sm->sample_time = DIAL_PERIOD_SAMPLE;
-        sm->sample_commands = 0;
-        sm->header.event_dispatcher(&sm->header.pending_event);
-        return;
-    }else{
-        if(sm->sample_time > 0){
-            sm->header.event_dispatcher(&sm->header.pending_event);
-            return;
+    dial->stopped_time = DIAL_PERIOD_STOPPED;
+    int diff_detected, moved_forward;
+    dial_diff_script(&position, &dial->position, &diff_detected, &moved_forward);
+    dial->position = position;
+    if(!moved_forward){
+        if(!catch_sum_overflow(&dial->diff, &diff_detected)){
+            dial->diff += diff_detected;
         }else{
-            sm->sample_time = DIAL_PERIOD_SAMPLE;
-            sm->last_sampled_position = position;
-            sm->sample_commands = 0;
-            sm->header.event_handler = (State_function) &DIAL_SLOW_MOVEMENT_STATE;
-            if(moved_foward){
-                sm->header.pending_event = FWD_DIAL_SLOW_EVENT;
-            }else{
-                sm->header.pending_event = BWD_DIAL_SLOW_EVENT;
-            }
-            sm->header.event_dispatcher(&sm->header.pending_event);
+            //God knows!!! How many ticks!!
         }
+        dial->event = DIAL_MOVED_BACKWARD_EVENT;
+        return 0;
     }
+    if(diff_detected > dial->diff){
+        dial->diff = diff_detected - dial->diff;
+        DIAL_TRANS(dial, DIAL_MOVING_FORWARD_STATE);
+        return 0;
+    }
+    dial->diff -= diff_detected;
+    dial->event = DIAL_MOVED_FORWARD_EVENT;
+    return 0;
 }

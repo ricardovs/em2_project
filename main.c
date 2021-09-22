@@ -1,11 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <ncurses.h>
+#include <stdlib.h>
 #include <sys/time.h>
-#include <time.h>
+#include "top_hsm.h"
 #include "hsm_event.h"
 #include "dial_hsm.h"
-#include "top_hsm.h"
 #include "utils_hsm.h"
 
 
@@ -48,7 +46,7 @@ void delay(int milisec){
 
 int main(){
     Top_hsm top;
-    INIT_TOP_HSM(&top, &print_event);
+    INIT_TOP_HSM(&top, print_event);
     int N=10;
     char c, cmd,cmds[N];
     unsigned nticks[N];
@@ -97,7 +95,7 @@ int main(){
             refresh();
             for(int j=0;j<i;j++){
                 for(int k=0; k<(int)nticks[j]; k++){
-                    TOP_RUN_ALL_HSMS(&top);
+                    RUN_TOP_HSM(&top);
                     delay(1);
                 }
                 if(cmds[j] == 'i'){
@@ -119,7 +117,7 @@ int main(){
     }while(cmd != 'q');
     printw("Done.\n");
     refresh();
-    delay(1200);
+    delay(500);
     endwin();
     return 0;
 }
