@@ -7,5 +7,5 @@
 
 int catch_sum_overflow(const unsigned * a, const unsigned * b);
 unsigned has_high_bit(const unsigned * a);
-
+void unsigned_int_to_string(char *const s, const int num, const int NUM_SIZE);
 #endif

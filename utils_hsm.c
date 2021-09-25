@@ -20,3 +20,14 @@ unsigned has_high_bit(const unsigned * a){
     }
     return 0;
 }
+void unsigned_int_to_string(char *const s, const int num, const int NUM_SIZE){
+    int a = num;
+    if(a < 0){
+        a = (-a);
+    }
+    for(int i=NUM_SIZE-1; i >=0; i--){
+        s[i] = '0' + a%10;
+        a /= 10;
+    }
+    s[NUM_SIZE] = '\0';
+}

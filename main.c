@@ -1,19 +1,31 @@
 #include <ncurses.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 #include "top_hsm.h"
 #include "hsm_event.h"
 #include "dial_hsm.h"
 #include "utils_hsm.h"
-
+#include "watcher.h"
 
 static unsigned dial_position = 0;
+static char display_msg[20];
 
 int DIAL_DEVICE_GET_POSITION(){
     return dial_position;
 }
 
 void DIAL_DEVICE_INIT(){
+    return;
+}
+void DISPLAY_DEVICE_INIT(){
+    return;
+}
+void DISPLAY_DEVICE_WRITE_STRING(char *const s){
+    printw("DISPLAY: %s\n", s);
+    refresh();
+}
+void DISPLAY_DEVICE_CLEAR(){
     return;
 }
 
@@ -26,6 +38,11 @@ void INCREMENT_DIAL_POSITION(){
 }
 void DECREMENT_DIAL_POSITION(){
     dial_position--;
+}
+
+void OUT_PRINT(const char *const s){
+    printw("%s", s);
+    refresh();
 }
 
 void print_event(HsmEvent * event){
@@ -46,8 +63,9 @@ void delay(int milisec){
 
 int main(){
     Top_hsm top;
-    INIT_TOP_HSM(&top, print_event);
-    int N=10;
+    Watcher w;
+    w.mov = &top;
+    int N=25;
     char c, cmd,cmds[N];
     unsigned nticks[N];
     struct timeval start, end, diff;
@@ -55,8 +73,9 @@ int main(){
     noecho();
     scrollok(stdscr, TRUE);
     keypad(stdscr, TRUE);
+    INIT_TOP_HSM(&top, print_event);
     do{
-        erase();
+        //erase();
         refresh();
         printw("Ready to receive commands. Commands list:\n\t 'i' -> Increment Dial\n\t 'd'-> Decrement Dial.\n\t 'c' -> Run comands passed and ask for more\n\t 'q' -> Execute previous comands and exit simulator.\nEnter first command.\n");
         refresh();
@@ -72,7 +91,7 @@ int main(){
             i++;
         };
         if((cmd != 'q') || (i>0)){
-            erase();
+            //erase();
             refresh();
             if(!(i<N)){
                 printw("Many commands. Taking a simulation step.\nPress Enter.\n");
@@ -95,7 +114,7 @@ int main(){
             refresh();
             for(int j=0;j<i;j++){
                 for(int k=0; k<(int)nticks[j]; k++){
-                    RUN_TOP_HSM(&top);
+                    WATCHER_RUN_TOP(&w);
                     delay(1);
                 }
                 if(cmds[j] == 'i'){

@@ -1,6 +1,6 @@
 DEFS :=  $(wildcard *.h)
 SRCS_BASIC := hsm_event.c utils_hsm.c time_counter_hsm.c
-SRCS_EXTRA :=  hsm_header.c dial_hsm.c display_hsm.c top_hsm.c
+SRCS_EXTRA :=  hsm_header.c dial_hsm.c dial_reader.c display_hsm.c top_hsm.c watcher.c
 OBJDIR = obj
 OBJSPATHS := $(patsubst %.c, $(OBJDIR)/%.o, $(SRCS_BASIC))
 OBJSPATHS_EXTRA :=  $(patsubst %.c, $(OBJDIR)/%.o, $(SRCS_EXTRA))
@@ -17,7 +17,7 @@ all: $(OBJSPATHS) $(OBJSPATHS_EXTRA)
 	@echo "Compiling ...."
 	$(CC) $^ -o $@
 
-$(OBJDIR)/%.o : %.c %.h | $(OBJDIR) 
+$(OBJDIR)/%.o : %.c %.h | $(OBJDIR)
 	$(CC) -c $< -o $@
 
 $(OBJDIR):
@@ -30,8 +30,8 @@ $(OBJDIR)/dial_hsm.o : dial_hsm.c dial_hsm.h \
 	$(CC) -c dial_hsm.c -o $(OBJDIR)/dial_hsm.o
 
 $(OBJDIR)/top_hsm.o : top_hsm.c top_hsm.h \
-                      $(OBJDIR)/hsm_event.o $(OBJDIR)/dial_hsm.o $(OBJDIR)/hsm_header.o \
-					  $(OBJDIR)/time_counter_hsm.o $(OBJDIR)/display_hsm.o
+                      $(OBJDIR)/hsm_event.o $(OBJDIR)/hsm_header.o $(OBJDIR)/dial_hsm.o  \
+					  $(OBJDIR)/dial_reader.o $(OBJDIR)/time_counter_hsm.o $(OBJDIR)/display_hsm.o
 	$(CC) -c top_hsm.c -o $(OBJDIR)/top_hsm.o
 
 $(OBJDIR)/hsm_header.o : hsm_header.c hsm_header.h \
@@ -39,8 +39,18 @@ $(OBJDIR)/hsm_header.o : hsm_header.c hsm_header.h \
 	$(CC) -c hsm_header.c -o $(OBJDIR)/hsm_header.o
 
 $(OBJDIR)/display_hsm.o : display_hsm.c display_hsm.h \
-						  $(OBJDIR)/hsm_header.o $(OBJDIR)/time_counter_hsm.o
+						  $(OBJDIR)/hsm_header.o $(OBJDIR)/time_counter_hsm.o \
+						  device_interface.h
 	$(CC) -c display_hsm.c -o $(OBJDIR)/display_hsm.o
+
+$(OBJDIR)/dial_reader.o : dial_reader.c dial_reader.h \
+						  $(OBJDIR)/dial_hsm.o $(OBJDIR)/hsm_header.o
+	$(CC) -c dial_reader.c -o $(OBJDIR)/dial_reader.o
+
+$(OBJDIR)/watcher.o : watcher.c watcher.h \
+					  main.c \
+					  $(OBJDIR)/top_hsm.o
+	$(CC) -c watcher.c -o $(OBJDIR)/watcher.o
 
 clear :
 	rm obj/*
