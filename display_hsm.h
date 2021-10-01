@@ -11,12 +11,15 @@ typedef struct Display_hsm{
     HsmEvent event;
     char message[DISPLAY_MESSAGE_LENGTH];
     TimeCounter *timer;
+    int show_minus;
     int refresh_ticks;
 }Display_hsm;
 
 void DISPLAY_INIT_HSM(Display_hsm *const display);
 void DISPLAY_RECEIVE_EVENT(Display_hsm *const display, HsmEvent event);
 void DISPLAY_UPDATE_MESSAGE(Display_hsm *const display);
+void DISPLAY_ADD_MINUS_TO_MESSAGE(Display_hsm *const display);
+void DISPLAY_UPDATE_DEVICE(Display_hsm *const display);
 void DISPLAY_UPDATE(Display_hsm *const display);
 void RUN_DISPLAY_HSM(Display_hsm * display);
 

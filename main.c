@@ -81,6 +81,8 @@ int main(){
         refresh();
         int i = 0;
         cmd = getch();
+        printw("Listenning ...\n");
+        refresh();
         while((i<N) && (cmd != 'q') && (cmd != 'c')){
             gettimeofday(&start, NULL);
             cmds[i]=cmd;

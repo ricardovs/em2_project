@@ -24,8 +24,11 @@ void DIAL_READER_UPDATE_OPERAND(DialReader_hsm *const dial_reader){
             dial_reader->operand.seconds=30;
             break;
         case 6:
+            dial_reader->operand.minutes=1;
+            break;
         case 7:
             dial_reader->operand.minutes=1;
+            dial_reader->operand.seconds=30;
             break;
         case 8:
             dial_reader->operand.minutes=2;
@@ -81,12 +84,19 @@ void DIAL_READER_INIT_HSM(DialReader_hsm *const dial_reader){
     dial_reader->value = ZERO_TIME_COUNTER;
     dial_reader->initial_value = 0;
     dial_reader->operand = ZERO_TIME_COUNTER;
+    dial_reader->operation = sum;
 }
 
 State_function DIAL_READER_IDLE_STATE_HANDLER(DialReader_hsm *const dial_reader){
     if((dial_reader->dial->state == DIAL_MOVING_FORWARD_STATE) ||
         (dial_reader->dial->state == DIAL_MOVING_BACKWARD_STATE)){
+            if(dial_reader->dial->state == DIAL_MOVING_BACKWARD_STATE){
+                dial_reader->operation = sub;
+            }else{
+                dial_reader->operation = sum;
+            }
             DIAL_READER_TRANS(dial_reader, DIAL_READER_STARTER_STATE);
+            return 0;
     }
     return 0;
 }
@@ -105,10 +115,10 @@ State_function DIAL_READER_READING_STATE_HANDLER(DialReader_hsm *const dial_read
     if(TIME_COUNTER_IS_NEGATIVE(&dial_reader->value)){
         dial_reader->value = ZERO_TIME_COUNTER;
         SUB_TIMER_COUNTER(&dial_reader->value, dial_reader->initial_value, &dial_reader->operand);
-        DIAL_RESTART_DIFF(dial_reader->dial);
     }
     else if(TIME_COUNTER_GREATER_THAN_MAX(&dial_reader->value)){
         dial_reader->value = MAX_TIME_COUNTER;
+        dial_reader->operation = sum;
         SUB_TIMER_COUNTER(&dial_reader->value, dial_reader->initial_value, &dial_reader->operand);
         DIAL_RESTART_DIFF(dial_reader->dial);
     }
@@ -137,10 +147,13 @@ void DIAL_READER_UPDATE_VALUE(DialReader_hsm *const dial_reader){
         dial_reader->dial->diff = 20;
     }
     DIAL_READER_UPDATE_OPERAND(dial_reader);
-    if(dial_reader->dial->state == DIAL_MOVING_BACKWARD_STATE){
-        SUB_TIMER_COUNTER(dial_reader->initial_value, &dial_reader->operand, &dial_reader->value);
-    }else{
-        ADD_TIMER_COUNTER(dial_reader->initial_value, &dial_reader->operand, &dial_reader->value);
+    switch(dial_reader->operation){
+        case sub:
+            SUB_TIMER_COUNTER(dial_reader->initial_value, &dial_reader->operand, &dial_reader->value);
+            break;
+        default:
+            ADD_TIMER_COUNTER(dial_reader->initial_value, &dial_reader->operand, &dial_reader->value);
+            break;
     }
 }
 

@@ -90,7 +90,11 @@ State_function TOP_SETTING_COUNTER_WAITING_STATE_HANDLER(Top_hsm * top){
 }
 
 State_function TOP_SETTING_UPDATER_STATE_HANDLER(Top_hsm * top){
-    DISPLAY_UPDATE(&top->display);
+    DISPLAY_UPDATE_MESSAGE(&top->display);
+    if((top->dial_reader.operation == sub) || (TIME_COUNTER_IS_NEGATIVE(&top->dial_reader.operand)) ){
+        DISPLAY_ADD_MINUS_TO_MESSAGE(&top->display);
+    }
+    DISPLAY_UPDATE_DEVICE(&top->display);
     if(top->dial_reader.state == DIAL_READER_ENDED_READING_STATE){
         if(TIME_COUNTER_IS_ZERO(&top->counter)){
             TOP_TRANS(top, TOP_OFF_STATE);
@@ -105,7 +109,11 @@ State_function TOP_SETTING_UPDATER_STATE_HANDLER(Top_hsm * top){
 }
 
 State_function TOP_SETTING_UPDATER_WAITING_STATE_HANDLER(Top_hsm * top){
-    DISPLAY_UPDATE(&top->display);
+    DISPLAY_UPDATE_MESSAGE(&top->display);
+    if(top->dial_reader.operation == sub){
+        DISPLAY_ADD_MINUS_TO_MESSAGE(&top->display);
+    }
+    DISPLAY_UPDATE_DEVICE(&top->display);
     if(top->dial_reader.state == DIAL_READER_ENDED_READING_STATE){
         if(TIME_COUNTER_IS_ZERO(&top->counter)){
             TOP_TRANS(top, TOP_OFF_STATE);
@@ -173,13 +181,14 @@ State_function TOP_COUNTING_RESET_STATE_HANDLER(Top_hsm * top){
     if(top->ticks_to_transit < 0){ //Avoid int overflow
         top->ticks_to_transit = -1;
     }
+    DISPLAY_UPDATE_MESSAGE(&top->display);
     if((top->dial_reader.state == DIAL_READER_IDLE_STATE) ||
     (top->dial_reader.state == DIAL_READER_ENDED_READING_STATE)){
         if(DECREMENT_TO_ZERO_TIMER_COUNTER(&top->counter)){
            TOP_TRANS(top, TOP_ENDED_COUNTING_STATE);
         }else{
             if(top->ticks_to_transit <= 0){
-                TOP_TRANS(top, TOP_COUNTING_UPDATER_STATE);
+                top->state= TOP_COUNTING_UPDATER_STATE;
             }
         }
     }else{
@@ -191,11 +200,12 @@ State_function TOP_COUNTING_RESET_STATE_HANDLER(Top_hsm * top){
 State_function TOP_COUNTING_UPDATER_STATE_HANDLER(Top_hsm * top){
     if((top->dial_reader.state == DIAL_READER_IDLE_STATE) ||
     (top->dial_reader.state == DIAL_READER_ENDED_READING_STATE)){
+        DISPLAY_UPDATE_MESSAGE(&top->display);
         if(DECREMENT_TO_ZERO_TIMER_COUNTER(&top->counter)){
            TOP_TRANS(top, TOP_ENDED_COUNTING_STATE);
         }
     }else{
-        TOP_TRANS(top, TOP_COUNTING_UPDATER_STATE);
+        TOP_TRANS(top, TOP_SETTING_UPDATER_STATE);
     }
     return 0;
 }

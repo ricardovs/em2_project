@@ -8,6 +8,7 @@ void DISPLAY_INIT_HSM(Display_hsm *const display){
     strcpy(display->message, "00:00:00");
     display->timer = 0;
     display->refresh_ticks = DISPLAY_REFRESH_TICKS_PERIOD;
+    display->show_minus = 0;
     DISPLAY_DEVICE_INIT();
 }
 
@@ -27,17 +28,22 @@ State_function DISPLAY_ON_STATE_HANDLER(Display_hsm* display){
     if(display->event == DISPLAY_OFF_EVENT){
         return DISPLAY_OFF_STATE;
     }
-    DISPLAY_UPDATE(display);
+    DISPLAY_UPDATE_DEVICE(display);
     return 0;
 }
-void DISPLAY_UPDATE(Display_hsm* display){
+
+void DISPLAY_UPDATE(Display_hsm *const display){
+    DISPLAY_UPDATE_MESSAGE(display);
+    DISPLAY_UPDATE_DEVICE(display);
+}
+
+void DISPLAY_UPDATE_DEVICE(Display_hsm* display){
     display->refresh_ticks--;
     if(display->refresh_ticks < 0){
-        DISPLAY_UPDATE_MESSAGE(display);
         DISPLAY_DEVICE_WRITE_STRING(display->message);
         display->refresh_ticks = DISPLAY_REFRESH_TICKS_PERIOD;
     }
-    display->state == DISPLAY_ON_STATE;
+    display->state = DISPLAY_ON_STATE;
 }
 
 State_function DISPLAY_OFF_STATE_HANDLER(Display_hsm * display){
@@ -48,10 +54,26 @@ State_function DISPLAY_OFF_STATE_HANDLER(Display_hsm * display){
     return 0;
 }
 
-
+void DISPLAY_ADD_MINUS_TO_MESSAGE(Display_hsm *const display){
+    if(*display->message == '-'){
+        return;
+    }
+    char old_value;
+    char new_value = '-';
+    int i;
+    for(i=0; i < DISPLAY_MESSAGE_LENGTH; i++){
+        old_value = *(display->message+i);
+        *(display->message+i) = new_value;
+        new_value = old_value;
+    }
+    *(display->message+i) = new_value;
+}
 
 void DISPLAY_UPDATE_MESSAGE(Display_hsm *const display){
     DISPLAY_CONVERT_TIME_TO_STRING(display->message, display->timer);
+    if(display->show_minus){
+        DISPLAY_ADD_MINUS_TO_MESSAGE(display);
+    }
 }
 
 void DISPLAY_CONVERT_TIME_TO_STRING(char *const s, const TimeCounter *const t){

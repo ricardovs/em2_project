@@ -7,12 +7,18 @@
 
 #define DIAL_READER_DISPLAY_PERIOD 500
 
+typedef enum DialReader_Operation{
+    sum,
+    sub
+}DialReader_Operation;
+
 typedef struct DialReader_hsm{
     State_function state;
     Dial_hsm * dial;
     TimeCounter value;
     TimeCounter *initial_value;
     TimeCounter operand;
+    DialReader_Operation operation;
     int remain_time;
 }DialReader_hsm;
 
