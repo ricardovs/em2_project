@@ -382,7 +382,7 @@ LDFLAGS=                                            \
 # Generate debug version if DEBUG is set
 #
 ifneq (${DEBUG},)
-CFLAGS+=-g -D DEBUG -O0
+CFLAGS+=-g -D DEBUG
 else
 CFLAGS+=-Os
 endif

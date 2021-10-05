@@ -11,6 +11,7 @@ void INIT_ALL_TOP_HSMS(Top_hsm * top){
     TOP_INIT_DISPLAY(top);
     TOP_INIT_DIAL(top);
     TOP_INIT_DIAL_READER(top);
+    TOP_INIT_MUSIC(top);
 }
 
 void TOP_INIT_DISPLAY(Top_hsm * top){
@@ -25,6 +26,10 @@ void TOP_INIT_DIAL(Top_hsm * top){
 void TOP_INIT_DIAL_READER(Top_hsm *top){
     DIAL_READER_INIT_HSM(&top->dial_reader);
     top->dial_reader.dial = &top->dial;
+}
+
+void TOP_INIT_MUSIC(Top_hsm *top){
+    MUSIC_INIT_HSM(&top->music);
 }
 
 void RUN_TOP_HSM(Top_hsm * top){

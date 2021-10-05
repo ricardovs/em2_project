@@ -11,11 +11,17 @@ extern void DISPLAY_DEVICE_WRITE_STRING(char *const s);
 extern void DISPLAY_DEVICE_CLEAR();
 
 //Sound interface
-extern void MUSIC_INIT();
-extern void MUSIC_PLAY_FINAL_SOUND();
-extern void MUSIC_PLAY_BEEP_SOUND();
-extern void MUSIC_STOP();
-extern int MUSIC_IS_PLAYING();
+typedef enum Device_sound{
+    DEVICE_SOUND_C,  //Do
+    DEVICE_SOUND_D,  //Re
+    DEVICE_SOUND_E   //Mi
+}Device_sound;
+
+extern void MUSIC_DEVICE_INIT();
+extern void MUSIC_DEVICE_PLAY();
+extern void MUSIC_DEVICE_STOP();
+extern void MUSIC_DEVICE_SET_SOUND(const Device_sound);
+extern int MUSIC_DEVICE_IS_PLAYING();
 
 //Debug interface
 extern void OUT_PRINT(const char *const s);

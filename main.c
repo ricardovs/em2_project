@@ -25,11 +25,16 @@
 
 #define SYSTICKDIVIDER 1000
 
+#define FRG_TIMER 0
+#define FRG_CHANNEL 2
+#define FRG_LOCATION 3
+
 void BlinkLED1(void);
 void BlinkLED2(void);
 void RUN_STEP(void);
 
 static Top_hsm top;
+static Frg_hsm frg;
 
 /*****************************************************************************
  * @brief  Main function
@@ -107,24 +112,34 @@ void BlinkLED2(void) {
     return;
 }
 
-void MUSIC_INIT(){
 
+void MUSIC_DEVICE_INIT(){
+    INIT_FRG_HSM(&frg, FRG_TIMER, FRG_CHANNEL, FRG_LOCATION);
 }
 
-void MUSIC_PLAY_FINAL_SOUND(){
-
+void MUSIC_DEVICE_PLAY(){
+    TURN_ON_FRG(&frg);
+}
+void MUSIC_DEVICE_STOP(){
+    TURN_OFF_FRG(&frg);
 }
 
-void MUSIC_PLAY_BEEP_SOUND(){
-
+void MUSIC_DEVICE_SET_SOUND(const Device_sound sound){
+    switch (sound){
+    case DEVICE_SOUND_C:
+        UPDATE_TOP_FRG(&frg, FRG_DO_TOP);
+        break;
+    case DEVICE_SOUND_D:
+        UPDATE_TOP_FRG(&frg, FRG_RE_TOP);
+        break;
+    case DEVICE_SOUND_E:
+        UPDATE_TOP_FRG(&frg, FRG_MI_TOP);
+    default:
+        break;
+    }
 }
-
-void MUSIC_STOP(){
-
-}
-
-int MUSIC_IS_PLAYING(){
-    return 0;
+int MUSIC_DEVICE_IS_PLAYING(){
+    return TIMER_IS_RUNNING(frg.timer);
 }
 
 void RUN_STEP(void){
