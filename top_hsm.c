@@ -1,11 +1,6 @@
 #include "top_hsm.h"
 
-void INIT_TOP_HSM(Top_hsm * top, void * outside_listener){
-    if(outside_listener != 0){
-        top->event_dispatcher = (Dispatch_function) outside_listener;
-    }else{
-        top->event_dispatcher = (Dispatch_function) TOP_EVENT_DISPATCHER;
-    }
+void INIT_TOP_HSM(Top_hsm * top){
     top->state = TOP_OFF_STATE;
     CLEAR_TIMER_COUNTER(&top->counter);
     top->ticks_to_transit = 0;
@@ -158,10 +153,6 @@ void TOP_TRANS(Top_hsm *const top, State_function next_state){
         top->display.timer = &top->counter;
     }
     top->state = next_state;
-}
-
-void TOP_EVENT_DISPATCHER(HsmEvent * event){
-    return;
 }
 
 State_function TOP_COUNTING_STATE_HANDLER(Top_hsm * top){

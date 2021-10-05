@@ -16,17 +16,15 @@ typedef struct Top_hsm{
     Dial_hsm dial;
     DialReader_hsm dial_reader;
     Display_hsm display;
-    Dispatch_function event_dispatcher;
 }Top_hsm;
 
-void INIT_TOP_HSM(Top_hsm * top, void * outside_listener);
+void INIT_TOP_HSM(Top_hsm * top);
     void INIT_ALL_TOP_HSMS(Top_hsm * top);
         void TOP_INIT_DISPLAY(Top_hsm * top);
         void TOP_INIT_DIAL(Top_hsm * top);
         void TOP_INIT_DIAL_READER(Top_hsm * top);
 void RUN_TOP_HSM(Top_hsm * top);
 void TOP_TRANS(Top_hsm * top, State_function next_state);
-void TOP_EVENT_DISPATCHER(HsmEvent * event);
 
 State_function TOP_OFF_STATE_HANDLER(Top_hsm * top);
 State_function TOP_SETTING_COUNTER_STATE_HANDLER(Top_hsm * top);

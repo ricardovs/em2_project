@@ -23,9 +23,7 @@
 #include "quadrature.h"
 
 
-
 #define SYSTICKDIVIDER 1000
-#define SOFTDIVIDER    1000
 
 void BlinkLED1(void);
 void BlinkLED2(void);
@@ -46,10 +44,9 @@ int main(void) {
     // Set clock source to external crystal: 48 MHz
     (void) SystemCoreClockSet(CLOCK_HFXO,1,1);
 
-
     /*Initiating Machines*/
     LED_Init(LED1|LED2);
-    INIT_TOP_HSM(&top, 0);
+    INIT_TOP_HSM(&top);
 
     /* Configure SysTick */
     SysTick_Config(SystemCoreClock/SYSTICKDIVIDER);    // Every 1 ms
@@ -60,7 +57,6 @@ int main(void) {
 
     /* Blink loop */
     while (1) {}
-
 }
 
 /*****************************************************************************
@@ -70,23 +66,65 @@ int main(void) {
  */
 
 void SysTick_Handler(void) {
-static int counter = 0;             // must be static
-    if( counter != 0 ) {
-        counter--;
-    } else {
-        Timers_dispatch();          // Every 1 second
-        counter = SOFTDIVIDER-1;
-    }
+    Timers_dispatch();          // Every 1ms second
 }
 
+#define BLINK_PERIOD_LED1 1000
+static int led1_blink = BLINK_PERIOD_LED1;
 
 void BlinkLED1(void) {
+    led1_blink--;
+    if(led1_blink > 0){
+        return;
+    }
+    led1_blink = BLINK_PERIOD_LED1;
     LED_Toggle(LED1);
 }
 
-void BlinkLED2(void) {
-    LED_Toggle(LED2);
+#define BLINK_PERIOD_LED2 500
+static int led2_blink = BLINK_PERIOD_LED2;
 
+void BlinkLED2(void) {
+    led2_blink--;
+    if(led2_blink > 0){
+        return;
+    }
+    led2_blink = BLINK_PERIOD_LED2;
+    if ((top.state == TOP_SETTING_COUNTER_STATE) ||
+        (top.state == TOP_SETTING_UPDATER_STATE) ||
+        (top.state == TOP_SETTING_COUNTER_WAITING_STATE) ||
+        (top.state == TOP_SETTING_UPDATER_WAITING_STATE)){
+            LED_On(LED2);
+            return;
+    }
+    if((top.state == TOP_COUNTING_STATE) ||
+       (top.state == TOP_COUNTING_RESET_STATE) ||
+       (top.state == TOP_COUNTING_UPDATER_STATE)){
+        LED_Toggle(LED2);
+        return;
+    }
+    LED_Off(LED2);
+    return;
+}
+
+void MUSIC_INIT(){
+
+}
+
+void MUSIC_PLAY_FINAL_SOUND(){
+
+}
+
+void MUSIC_PLAY_BEEP_SOUND(){
+
+}
+
+void MUSIC_STOP(){
+
+}
+
+int MUSIC_IS_PLAYING(){
+    return 0;
 }
 
 void RUN_STEP(void){
@@ -99,8 +137,6 @@ void DIAL_DEVICE_INIT(){
 int DIAL_DEVICE_GET_POSITION(){
     return Quadrature_GetPosition();
 }
-
-
 
 void DISPLAY_DEVICE_INIT(){
     LCD_Init();
