@@ -5,7 +5,7 @@
 #include "hsm_event.h"
 #include "time_counter_hsm.h"
 
-#define DIAL_READER_DISPLAY_PERIOD 500
+#define DIAL_READER_DISPLAY_PERIOD 50
 
 typedef enum DialReader_Operation{
     sum,

@@ -1,3 +1,4 @@
 .vscode/
+gcc/
 obj/
 main

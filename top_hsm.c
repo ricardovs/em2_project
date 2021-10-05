@@ -1,6 +1,4 @@
 #include "top_hsm.h"
-#include <ncurses.h>
-
 
 void INIT_TOP_HSM(Top_hsm * top, void * outside_listener){
     if(outside_listener != 0){

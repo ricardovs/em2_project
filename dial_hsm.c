@@ -1,4 +1,3 @@
-#include <ncurses.h>
 #include "dial_hsm.h"
 #include "utils_hsm.h"
 

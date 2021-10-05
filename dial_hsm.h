@@ -3,7 +3,7 @@
 #include "hsm_header.h"
 #include "hsm_event.h"
 #include "device_interface.h"
-// Constants Definition
+
 #define DIAL_PERIOD_STOPPED 1500
 #define DIAL_PERIOD_SAMPLED 1000
 #define DIAL_TICKS_PER_ROTATION 20

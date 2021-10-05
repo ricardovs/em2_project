@@ -7,7 +7,7 @@ extern int DIAL_DEVICE_GET_POSITION();
 
 //Display interface
 extern void DISPLAY_DEVICE_INIT();
-extern void DISPLAY_DEVICE_WRITE_STRING(char *s);
+extern void DISPLAY_DEVICE_WRITE_STRING(char *const s);
 extern void DISPLAY_DEVICE_CLEAR();
 
 //Debug interface
